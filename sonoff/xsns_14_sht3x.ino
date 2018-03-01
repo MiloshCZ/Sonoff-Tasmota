@@ -1,7 +1,7 @@
 /*
   xsns_14_sht3x.ino - SHT3X temperature and humidity sensor support for Sonoff-Tasmota
 
-  Copyright (C) 2017  Theo Arends
+  Copyright (C) 2018  Theo Arends
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,27 +20,21 @@
 #ifdef USE_I2C
 #ifdef USE_SHT3X
 /*********************************************************************************************\
- * SHT3X - Temperature and Humidy
+ * SHT3X and SHTC3 - Temperature and Humidy
  *
- * Required library: none but based on Adafruit Industries SHT31 library
- *
- * I2C Address: 0x44 or 0x45
+ * I2C Address: 0x44, 0x45 or 0x70 (SHTC3)
 \*********************************************************************************************/
 
-#define SHT3X_ADDR_GND      0x44  // address pin low (GND)
-#define SHT3X_ADDR_VDD      0x45  // address pin high (VDD)
+#define SHT3X_ADDR_GND      0x44       // address pin low (GND)
+#define SHT3X_ADDR_VDD      0x45       // address pin high (VDD)
+#define SHTC3_ADDR          0x70       // address for shtc3 sensor
+
+const char kShtTypes[] PROGMEM = "SHT3X|SHT3X|SHTC3";
 
 uint8_t sht3x_type = 0;
 uint8_t sht3x_address;
-uint8_t sht3x_addresses[] = { SHT3X_ADDR_GND, SHT3X_ADDR_VDD };
-
-bool Sht3xConvert()
-{
-  if (sht3x_type) {
-    return I2cWrite8(sht3x_address, 0x2C, 0x06);
-  }
-  return false;
-}
+uint8_t sht3x_addresses[] = { SHT3X_ADDR_GND, SHT3X_ADDR_VDD, SHTC3_ADDR };
+char sht3x_types[6];
 
 bool Sht3xRead(float &t, float &h)
 {
@@ -49,22 +43,29 @@ bool Sht3xRead(float &t, float &h)
   t = NAN;
   h = NAN;
 
-  Wire.requestFrom(sht3x_address, (uint8_t)6);
-  if (Wire.available() != 6) {
+  Wire.beginTransmission(sht3x_address);
+  if (SHTC3_ADDR == sht3x_address) {
+    Wire.write(0x35);                  // Wake from
+    Wire.write(0x17);                  // sleep
+    Wire.endTransmission();
+    Wire.beginTransmission(sht3x_address);
+    Wire.write(0x78);                  // Dissable clock stretching ( I don't think that wire library support clock stretching )
+    Wire.write(0x66);                  // High resolution
+  } else {
+    Wire.write(0x2C);                  // Enable clock stretching
+    Wire.write(0x06);                  // High repeatability
+  }
+  if (Wire.endTransmission() != 0) {   // Stop I2C transmission
     return false;
   }
-  // Read 6 bytes of data
-  // cTemp msb, cTemp lsb, cTemp crc, humidity msb, humidity lsb, humidity crc
-  for (uint8_t i = 0; i < 6; i++) {
-    data[i] = Wire.read();
-  }
-//  delay(50);
-//  if (Wire.available() != 0) {
-//    return false;
-//  }
+  delay(30);                           // Timing verified with logic analyzer (10 is to short)
+  Wire.requestFrom(sht3x_address, (uint8_t)6);   // Request 6 bytes of data
+  for (int i = 0; i < 6; i++) {
+    data[i] = Wire.read();             // cTemp msb, cTemp lsb, cTemp crc, humidity msb, humidity lsb, humidity crc
+  };
   t = ConvertTemp((float)((((data[0] << 8) | data[1]) * 175) / 65535.0) - 45);
   h = (float)((((data[3] << 8) | data[4]) * 100) / 65535.0);
-  return true;
+  return (!isnan(t) && !isnan(h));
 }
 
 /********************************************************************************************/
@@ -75,11 +76,14 @@ void Sht3xDetect()
     return;
   }
 
+  float t;
+  float h;
   sht3x_type = 1;
   for (byte i = 0; i < sizeof(sht3x_addresses); i++) {
     sht3x_address = sht3x_addresses[i];
-    if (Sht3xConvert()) {
-      snprintf_P(log_data, sizeof(log_data), S_LOG_I2C_FOUND_AT, "SHT3X", sht3x_address);
+    if (Sht3xRead(t, h)) {
+      GetTextIndexed(sht3x_types, sizeof(sht3x_types), i, kShtTypes);
+      snprintf_P(log_data, sizeof(log_data), S_LOG_I2C_FOUND_AT, sht3x_types, htu_address);
       AddLog(LOG_LEVEL_DEBUG);
       return;
     }
@@ -99,14 +103,14 @@ void Sht3xShow(boolean json)
       dtostrfd(h, Settings.flag2.humidity_resolution, humidity);
 
       if (json) {
-        snprintf_P(mqtt_data, sizeof(mqtt_data), JSON_SNS_TEMPHUM, mqtt_data, "SHT3X", temperature, humidity);
+        snprintf_P(mqtt_data, sizeof(mqtt_data), JSON_SNS_TEMPHUM, mqtt_data, sht3x_types, temperature, humidity);
 #ifdef USE_DOMOTICZ
         DomoticzTempHumSensor(temperature, humidity);
 #endif  // USE_DOMOTICZ
 #ifdef USE_WEBSERVER
       } else {
-        snprintf_P(mqtt_data, sizeof(mqtt_data), HTTP_SNS_TEMP, mqtt_data, "SHT3X", temperature, TempUnit());
-        snprintf_P(mqtt_data, sizeof(mqtt_data), HTTP_SNS_HUM, mqtt_data, "SHT3X", humidity);
+        snprintf_P(mqtt_data, sizeof(mqtt_data), HTTP_SNS_TEMP, mqtt_data, sht3x_types, temperature, TempUnit());
+        snprintf_P(mqtt_data, sizeof(mqtt_data), HTTP_SNS_HUM, mqtt_data, sht3x_types, humidity);
 #endif  // USE_WEBSERVER
       }
     }
@@ -125,19 +129,15 @@ boolean Xsns14(byte function)
 
   if (i2c_flg) {
     switch (function) {
-      case FUNC_XSNS_INIT:
+      case FUNC_INIT:
         Sht3xDetect();
         break;
-      case FUNC_XSNS_PREP:
-        Sht3xConvert();
-        break;
-      case FUNC_XSNS_JSON_APPEND:
+      case FUNC_JSON_APPEND:
         Sht3xShow(1);
         break;
 #ifdef USE_WEBSERVER
-      case FUNC_XSNS_WEB:
+      case FUNC_WEB_APPEND:
         Sht3xShow(0);
-        Sht3xConvert();
         break;
 #endif  // USE_WEBSERVER
     }

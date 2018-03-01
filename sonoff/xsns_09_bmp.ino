@@ -1,7 +1,7 @@
 /*
   xsns_09_bmp.ino - BMP pressure, temperature, humidity and gas sensor support for Sonoff-Tasmota
 
-  Copyright (C) 2017  Heiko Krupp and Theo Arends
+  Copyright (C) 2018  Heiko Krupp and Theo Arends
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -98,16 +98,16 @@ boolean Bmp180Calibration()
     return false;
   }
 
-  if ((cal_ac1 == 0xFFFF) |
-      (cal_ac2 == 0xFFFF) |
-      (cal_ac3 == 0xFFFF) |
+  if ((cal_ac1 == (int16_t)0xFFFF) |
+      (cal_ac2 == (int16_t)0xFFFF) |
+      (cal_ac3 == (int16_t)0xFFFF) |
       (cal_ac4 == 0xFFFF) |
       (cal_ac5 == 0xFFFF) |
       (cal_ac6 == 0xFFFF) |
-      (cal_b1 == 0xFFFF) |
-      (cal_b2 == 0xFFFF) |
-      (cal_mc == 0xFFFF) |
-      (cal_md == 0xFFFF)) {
+      (cal_b1 == (int16_t)0xFFFF) |
+      (cal_b2 == (int16_t)0xFFFF) |
+      (cal_mc == (int16_t)0xFFFF) |
+      (cal_md == (int16_t)0xFFFF)) {
     return false;
   }
   return true;
@@ -128,9 +128,6 @@ double Bmp180ReadTemperature()
 double Bmp180ReadPressure()
 {
   int32_t p;
-  uint8_t msb;
-  uint8_t lsb;
-  uint8_t xlsb;
 
   I2cWrite8(bmp_address, BMP180_REG_CONTROL, BMP180_PRESSURE3); // Highest resolution
   delay(2 + (4 << BMP180_OSS));                                 // 26ms conversion time at ultra high resolution
@@ -426,9 +423,9 @@ void BmpShow(boolean json)
 #ifdef USE_BME680
       case BME680_CHIPID:
         t = bme680.temperature;
-        p = bme680.pressure;
+        p = bme680.pressure / 100.0;
         h = bme680.humidity;
-        g = bme680.gas_resistance;
+        g = bme680.gas_resistance / 1000.0;
         break;
 #endif  // USE_BME680
     }
@@ -450,21 +447,21 @@ void BmpShow(boolean json)
     dtostrfd(h, Settings.flag2.humidity_resolution, humidity);
 #ifdef USE_BME680
     char gas_resistance[10];
-    dtostrfd(g / 1000.0, 2, gas_resistance);
+    dtostrfd(g, 2, gas_resistance);
 #endif  // USE_BME680
 
     if (json) {
       char json_humidity[40];
-      snprintf_P(json_humidity, sizeof(json_humidity), PSTR(",\"" D_HUMIDITY "\":%s"), humidity);
+      snprintf_P(json_humidity, sizeof(json_humidity), PSTR(",\"" D_JSON_HUMIDITY "\":%s"), humidity);
       char json_sealevel[40];
-      snprintf_P(json_sealevel, sizeof(json_sealevel), PSTR(",\"" D_PRESSUREATSEALEVEL "\":%s"), sea_pressure);
+      snprintf_P(json_sealevel, sizeof(json_sealevel), PSTR(",\"" D_JSON_PRESSUREATSEALEVEL "\":%s"), sea_pressure);
 #ifdef USE_BME680
       char json_gas[40];
-      snprintf_P(json_gas, sizeof(json_gas), PSTR(",\"" D_GAS "\":%s"), gas_resistance);
-      snprintf_P(mqtt_data, sizeof(mqtt_data), PSTR("%s,\"%s\":{\"" D_TEMPERATURE "\":%s%s,\"" D_PRESSURE "\":%s%s%s}"),
+      snprintf_P(json_gas, sizeof(json_gas), PSTR(",\"" D_JSON_GAS "\":%s"), gas_resistance);
+      snprintf_P(mqtt_data, sizeof(mqtt_data), PSTR("%s,\"%s\":{\"" D_JSON_TEMPERATURE "\":%s%s,\"" D_JSON_PRESSURE "\":%s%s%s}"),
         mqtt_data, bmp_name, temperature, (bmp_model >= 2) ? json_humidity : "", pressure, (Settings.altitude != 0) ? json_sealevel : "", (bmp_model >= 3) ? json_gas : "");
 #else
-      snprintf_P(mqtt_data, sizeof(mqtt_data), PSTR("%s,\"%s\":{\"" D_TEMPERATURE "\":%s%s,\"" D_PRESSURE "\":%s%s}"),
+      snprintf_P(mqtt_data, sizeof(mqtt_data), PSTR("%s,\"%s\":{\"" D_JSON_TEMPERATURE "\":%s%s,\"" D_JSON_PRESSURE "\":%s%s}"),
         mqtt_data, bmp_name, temperature, (bmp_model >= 2) ? json_humidity : "", pressure, (Settings.altitude != 0) ? json_sealevel : "");
 #endif  // USE_BME680
 #ifdef USE_DOMOTICZ
@@ -502,19 +499,23 @@ boolean Xsns09(byte function)
 
   if (i2c_flg) {
     switch (function) {
-//      case FUNC_XSNS_INIT:
-//        break;
-      case FUNC_XSNS_PREP:
+      case FUNC_PREP_BEFORE_TELEPERIOD:
         BmpDetect();
+        break;
+      case FUNC_EVERY_SECOND:
 #ifdef USE_BME680
-        Bme680PerformReading();
+        if ((Settings.tele_period - tele_period) < 300) {  // 5 minute stabilization time
+          if (tele_period &1) {
+            Bme680PerformReading();  // Keep BME680 busy every two seconds
+          }
+        }
 #endif  // USE_BME680
         break;
-      case FUNC_XSNS_JSON_APPEND:
+      case FUNC_JSON_APPEND:
         BmpShow(1);
         break;
 #ifdef USE_WEBSERVER
-      case FUNC_XSNS_WEB:
+      case FUNC_WEB_APPEND:
         BmpShow(0);
 #ifdef USE_BME680
         Bme680PerformReading();
