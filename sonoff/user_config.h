@@ -42,7 +42,7 @@
 #define PROJECT                "sonoff"          // PROJECT is used as the default topic delimiter and OTA file name
                                                  //   As an IDE restriction it needs to be the same as the main .ino file
 
-#define CFG_HOLDER             0x20161209        // [Reset 1] Change this value to load following default configuration parameters
+#define CFG_HOLDER             0x20180314        // [Reset 1] Change this value to load following default configuration parameters
 #define SAVE_DATA              1                 // [SaveData] Save changed parameters to Flash (0 = disable, 1 - 3600 seconds)
 #define SAVE_STATE             1                 // [SetOption0] Save changed power state to Flash (0 = disable, 1 = enable)
 
@@ -56,7 +56,7 @@
 #define STA_PASS1              "VnsqrtnrsddbrN"  // [Password1] Wifi password
 #define STA_SSID2              "indebuurt2"      // [Ssid2] Optional alternate AP Wifi SSID
 #define STA_PASS2              "VnsqrtnrsddbrN"  // [Password2] Optional alternate AP Wifi password
-#define WIFI_CONFIG_TOOL       WIFI_WPSCONFIG    // [WifiConfig] Default tool if wifi fails to connect
+#define WIFI_CONFIG_TOOL       WIFI_SMARTCONFIG  // [WifiConfig] Default tool if wifi fails to connect
                                                  //   (WIFI_RESTART, WIFI_SMARTCONFIG, WIFI_MANAGER, WIFI_WPSCONFIG, WIFI_RETRY, WIFI_WAIT)
 
 // -- Syslog --------------------------------------
@@ -170,7 +170,7 @@
 #define ENERGY_RESOLUTION      3                 // [EnergyRes] Maximum number of decimals (0 - 5) showing energy usage in kWh
 
 // -- Internal Analog input -----------------------
-#define USE_ADC_VCC                              // Display Vcc in Power status. Disable for use as Analog input on selected devices
+//#define USE_ADC_VCC                              // Display Vcc in Power status. Disable for use as Analog input on selected devices
 
 // -- One wire sensors ----------------------------
                                                  // WARNING: Select none for default one DS18B20 sensor or enable one of the following two options for multiple sensors
