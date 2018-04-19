@@ -28,6 +28,7 @@
  * Use online command StateText to translate ON, OFF, HOLD and TOGGLE.
  * Use online command Prefix to translate cmnd, stat and tele.
  *
+ * Updated until v5.12.0
 \*********************************************************************/
 
 //#define LANGUAGE_MODULE_NAME         // Enable to display "Module Generic" (ie Spanish), Disable to display "Generic Module" (ie English)
@@ -77,6 +78,7 @@
 #define D_DNS_SERVER "Servidor DNS"
 #define D_DONE "Concluído"
 #define D_DST_TIME "DST"
+#define D_ECO2 "eCO2"
 #define D_EMULATION "Emulação"
 #define D_ENABLED "Habilitado"
 #define D_ERASE "Apagar"
@@ -127,6 +129,7 @@
 #define D_RESTART_REASON "Razão do reinicio"
 #define D_RESTORE "Restauro"
 #define D_RETAINED "Manter"
+#define D_RULE "Rule"
 #define D_SAVE "Salvar"
 #define D_SENSOR "Sensor"
 #define D_SSID "SSId"
@@ -136,12 +139,15 @@
 #define D_SUBNET_MASK "Mascara sub rede"
 #define D_SUBSCRIBE_TO "Subescrever para"
 #define D_SUCCESSFUL "Successo"
+#define D_SUNRISE "Sunrise"
+#define D_SUNSET "Sunset"
 #define D_TEMPERATURE "Temperatura"
 #define D_TO "para"
 #define D_TOGGLE "Pressionar"
 #define D_TOPIC "Tópico"
 #define D_TRANSMIT "Transmitir"
 #define D_TRUE "Verdadeiro"
+#define D_TVOC "TVOC"
 #define D_UPGRADE "Atualizar"
 #define D_UPLOAD "Enviar"
 #define D_UPTIME "Tempo de Atividade"
@@ -358,6 +364,36 @@
   #define D_DOMOTICZ_AIRQUALITY "Qualidade do Ar"
 #define D_DOMOTICZ_UPDATE_TIMER "Tempo de atualização"
 
+// xdrv_09_timers.ino
+#define D_CONFIGURE_TIMER "Configure Timer"
+#define D_TIMER_PARAMETERS "Timer parameters"
+#define D_TIMER_ARM "Arm"
+#define D_TIMER_TIME "Time"
+#define D_TIMER_DAYS "Days"
+#define D_TIMER_REPEAT "Repeat"
+#define D_TIMER_OUTPUT "Output"
+#define D_TIMER_ACTION "Action"
+
+// xdrv_10_knx.ino
+#define D_CONFIGURE_KNX "Configure KNX"
+#define D_KNX_PARAMETERS "KNX Parameters"
+#define D_KNX_GENERAL_CONFIG "General"
+#define D_KNX_PHYSICAL_ADDRESS "Physical Address"
+#define D_KNX_PHYSICAL_ADDRESS_NOTE "( Must be unique on the KNX network )"
+#define D_KNX_ENABLE "Enable KNX"
+#define D_KNX_GROUP_ADDRESS_TO_WRITE "Data to Send to Group Addresses"
+#define D_ADD "Add"
+#define D_DELETE "Delete"
+#define D_REPLY "Reply"
+#define D_KNX_GROUP_ADDRESS_TO_READ "Group Addresses to Receive Data from"
+#define D_LOG_KNX "KNX: "
+#define D_RECEIVED_FROM "Received from"
+#define D_KNX_COMMAND_WRITE "Write"
+#define D_KNX_COMMAND_READ "Read"
+#define D_KNX_COMMAND_OTHER "Other"
+#define D_SENT_TO "sent to"
+#define D_KNX_WARNING "The group address ( 0 / 0 / 0 ) is reserved and can not be used."
+
 // xdrv_03_energy.ino
 #define D_ENERGY_TODAY "Consumo energético de hoje"
 #define D_ENERGY_YESTERDAY "Consumo energético de ontem"
@@ -427,6 +463,7 @@
 #define D_UNIT_MILLIAMPERE "mA"
 #define D_UNIT_MILLISECOND "ms"
 #define D_UNIT_MINUTE "Min"
+#define D_UNIT_PARTS_PER_BILLION "ppb"
 #define D_UNIT_PARTS_PER_DECILITER "ppd"
 #define D_UNIT_PARTS_PER_MILLION "ppm"
 #define D_UNIT_PRESSURE "hPa"

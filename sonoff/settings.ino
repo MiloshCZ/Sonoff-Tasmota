@@ -54,6 +54,13 @@
 #define HOME_ASSISTANT_DISCOVERY_ENABLE 0
 #endif
 
+#ifndef LATITUDE
+#define LATITUDE               48.858360         // [Latitude] Your location to be used with sunrise and sunset
+#endif
+#ifndef LONGITUDE
+#define LONGITUDE              2.294442          // [Longitude] Your location to be used with sunrise and sunset
+#endif
+
 /*********************************************************************************************\
  * RTC memory
 \*********************************************************************************************/
@@ -597,6 +604,9 @@ void SettingsDefaultSet2()
 
   // 5.10.1
   SettingsDefaultSet_5_10_1();
+
+  Settings.latitude = (int)((double)LATITUDE * 1000000);
+  Settings.longitude = (int)((double)LONGITUDE * 1000000);
 }
 
 /********************************************************************************************/
@@ -744,7 +754,7 @@ void SettingsDelta()
       SettingsDefaultSet_3_2_4();
     }
     if (Settings.version < 0x03020500) {  // 3.2.5 - Add parameter
-      GetMqttClient(Settings.friendlyname[0], Settings.mqtt_client, sizeof(Settings.friendlyname[0]));
+      Format(Settings.friendlyname[0], Settings.mqtt_client, sizeof(Settings.friendlyname[0]));
       strlcpy(Settings.friendlyname[1], FRIENDLY_NAME"2", sizeof(Settings.friendlyname[1]));
       strlcpy(Settings.friendlyname[2], FRIENDLY_NAME"3", sizeof(Settings.friendlyname[2]));
       strlcpy(Settings.friendlyname[3], FRIENDLY_NAME"4", sizeof(Settings.friendlyname[3]));
@@ -910,13 +920,25 @@ void SettingsDelta()
       Settings.sbaudrate = SOFT_BAUDRATE / 1200;
       Settings.serial_delimiter = 0xff;
     }
-    if (Settings.version < 0x050C0009) {
-      memset(&Settings.timer, 0x00, sizeof(Timer) * MAX_TIMERS);
+//    if (Settings.version < 0x050C0009) {
+//      memset(&Settings.timer, 0x00, sizeof(Timer) * MAX_TIMERS);
+//    }
+    if (Settings.version < 0x050C000A) {
+      Settings.latitude = (int)((double)LATITUDE * 1000000);
+      Settings.longitude = (int)((double)LONGITUDE * 1000000);
+    }
+    if (Settings.version < 0x050C000B) {
+      memset(&Settings.rules, 0x00, sizeof(Settings.rules));
+    }
+    if (Settings.version < 0x050C000D) {
+      memmove(Settings.rules, Settings.rules -256, sizeof(Settings.rules));  // move rules up by 256 bytes
+      memset(&Settings.timer, 0x00, sizeof(Timer) * MAX_TIMERS);  // Reset timers as layout has changed from v5.12.0i
+      Settings.knx_GA_registered = 0;
+      Settings.knx_CB_registered = 0;
+      memset(&Settings.knx_physsical_addr, 0x00, 0x800 - 0x6b8);  // Reset until 0x800 for future use
     }
 
     Settings.version = VERSION;
     SettingsSave(1);
   }
 }
-
-

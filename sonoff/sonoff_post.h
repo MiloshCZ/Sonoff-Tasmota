@@ -33,6 +33,11 @@ void WifiWpsStatusCallback(wps_cb_status status);
 }
 #endif
 
+//#ifdef USE_KNX  // Enabling this will fail compilation. It has no impact if not used. (20180417)
+#include <esp-knx-ip.h>
+void KNX_CB_Action(message_t const &msg, void *arg);
+//#endif  // USE_KNX
+
 #define USE_DHT                               // Default DHT11 sensor needs no external library
 
 #ifdef USE_ALL_SENSORS  // ===================== Configure sonoff-xxl.bin =========================
@@ -45,6 +50,7 @@ void WifiWpsStatusCallback(wps_cb_status status);
 #define USE_HTU                               // Add I2C code for HTU21/SI7013/SI7020/SI7021 sensor (+1k5 code)
 #define USE_BMP                               // Add I2C code for BMP085/BMP180/BMP280/BME280 sensor (+4k code)
   #define USE_BME680                          // Add additional support for BME680 sensor using Adafruit Sensor and BME680 libraries (+6k code)
+#define USE_SGP30                             // Add I2C code for SGP30 sensor (+1k1 code)
 #define USE_BH1750                            // Add I2C code for BH1750 sensor (+0k5 code)
 #define USE_VEML6070                          // Add I2C code for VEML6070 sensor (+0k5 code)
 #define USE_TSL2561                           // Add I2C code for TSL2561 sensor using library Adafruit TSL2561 Arduino (+1k2 code)
@@ -100,6 +106,12 @@ void WifiWpsStatusCallback(wps_cb_status status);
 //#endif
 #ifdef USE_EMULATION
 #undef USE_EMULATION                          // Disable Wemo or Hue emulation
+#endif
+#ifdef USE_TIMERS
+#undef USE_TIMERS                             // Disable support for up to 16 timers
+#endif
+#ifdef USE_SUNRISE
+#undef USE_SUNRISE                            // Disable support for Sunrise and sunset tools
 #endif
 #ifdef USE_PZEM004T
 #undef USE_PZEM004T                           // Disable PZEM004T energy sensor
