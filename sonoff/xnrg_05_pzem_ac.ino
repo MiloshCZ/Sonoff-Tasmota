@@ -1,7 +1,7 @@
 /*
   xnrg_05_pzem_ac.ino - PZEM-014,016 Modbus AC energy sensor support for Sonoff-Tasmota
 
-  Copyright (C) 2018  Theo Arends
+  Copyright (C) 2019  Theo Arends
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ void PzemAcEverySecond(void)
     uint8_t buffer[26];
 
     uint8_t error = PzemAcModbus->ReceiveBuffer(buffer, 10);
-    AddLogSerial(LOG_LEVEL_DEBUG_MORE, buffer, (buffer[2]) ? buffer[2] +5 : sizeof(buffer));
+    AddLogBuffer(LOG_LEVEL_DEBUG_MORE, buffer, (buffer[2]) ? buffer[2] +5 : sizeof(buffer));
 
     if (error) {
       snprintf_P(log_data, sizeof(log_data), PSTR(D_LOG_DEBUG "PzemAc response error %d"), error);
@@ -62,9 +62,11 @@ void PzemAcEverySecond(void)
       energy_power_factor = (float)((buffer[19] << 8) + buffer[20]) / 100.0;                                          // 1.00
       float energy = (float)((buffer[15] << 24) + (buffer[16] << 16) + (buffer[13] << 8) + buffer[14]);               // 4294967295 Wh
 
-      if (!energy_start || (energy < energy_start)) { energy_start = energy; }  // Init after restart and hanlde roll-over if any
-      energy_kWhtoday += (energy - energy_start) * 100;
-      energy_start = energy;
+      if (!energy_start || (energy < energy_start)) { energy_start = energy; }  // Init after restart and handle roll-over if any
+      if (energy != energy_start) {
+        energy_kWhtoday += (unsigned long)((energy - energy_start) * 100);
+        energy_start = energy;
+      }
       EnergyUpdateToday();
     }
   }
@@ -102,7 +104,7 @@ void PzemAcDrvInit(void)
  * Interface
 \*********************************************************************************************/
 
-int Xnrg05(byte function)
+int Xnrg05(uint8_t function)
 {
   int result = 0;
 
