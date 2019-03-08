@@ -1896,6 +1896,32 @@ const mytmplt kModules[MAXMODULE] PROGMEM = {
      GPIO_LED1_INV,    // GPIO15 Blue LED - Link status
      0, 0
   },
+  { "Arilux LC10",     // Arilux LC10 (ESP8285), RGBW + RF
+                       // https://github.com/arendst/Sonoff-Tasmota/wiki/MagicHome-with-ESP8285
+                       // https://www.aliexpress.com/item/DC5-24V-Wireless-WIFI-LED-RGB-Controller-RGBW-Controller-IR-RF-Remote-Control-IOS-Android-for/32827253255.html
+                       // https://www.aliexpress.com/item/Wifi-LED-RGB-Controler-DC12V-MIni-Wifi-RGB-RGBW-LED-Controller-for-RGB-RGBW-LED-Strip/32673444047.html
+     GPIO_USER,        // GPIO00 Optional Button
+     GPIO_USER,        // GPIO01 Serial RXD and Optional sensor
+     0,
+     GPIO_USER,        // GPIO03 Serial TXD and Optional sensor0
+     GPIO_ARIRFRCV,    // GPIO04 RF receiver input
+     GPIO_PWM2,        // GPIO05 RGB LED Green
+                       // GPIO06 (SD_CLK   Flash)
+                       // GPIO07 (SD_DATA0 Flash QIO/DIO/DOUT)
+                       // GPIO08 (SD_DATA1 Flash QIO/DIO/DOUT)
+     0,                // GPIO09 (SD_DATA2 Flash QIO or ESP8285)
+     0,                // GPIO10 (SD_DATA3 Flash QIO or ESP8285)
+                       // GPIO11 (SD_CMD   Flash)
+     GPIO_PWM3,        // GPIO12 RGB LED Blue
+     GPIO_PWM4,        // GPIO13 RGBW LED White
+     GPIO_PWM1,        // GPIO14 RGB LED Red
+     GPIO_LED4_INV,    // GPIO15 RF receiver control
+     0, 0
+  }
+};
+
+/*
+  Optionals
   { "SYF05",           // Sunyesmart SYF05 (a.k.a. Fcmila) = TYWE3S + SM16726
                        // Also works with Merkury 904 RGBW Bulbs with 13 set to GPIO_SM16716_SEL
                        // https://www.flipkart.com/fc-mila-bxav-xs-ad-smart-bulb/p/itmf85zgs45fzr7n
@@ -1919,11 +1945,7 @@ const mytmplt kModules[MAXMODULE] PROGMEM = {
      0,                // GPIO15 wired to GND
      GPIO_USER,        // GPIO16 N.C.
      GPIO_FLAG_ADC0    // ADC0 A0 Analog input
-  }
-};
-
-/*
-  Optionals
+  },
 
   { "RGB Smart Plug",  // Tuya based smart plug with power monitoring and RGB light
                        // https://www.aliexpress.com/item/ET-Smart-Plug-Wifi-Socket-With-Switch-Phone-APP-Voice-Remote-Control-Monitor-Smart-Timing-Switch/32964036349.html?spm=a2g0s.9042311.0.0.439c4c4d4N8N2Q
